@@ -39,14 +39,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST create new subscription
   app.post("/api/subscriptions", async (req: Request, res: Response) => {
     try {
+      console.log("Received subscription data:", JSON.stringify(req.body));
+      
       const subscriptionData = insertSubscriptionSchema.parse(req.body);
+      console.log("Validated subscription data:", JSON.stringify(subscriptionData));
+      
       const newSubscription = await storage.createSubscription(subscriptionData);
+      console.log("Created subscription:", JSON.stringify(newSubscription));
+      
       res.status(201).json(newSubscription);
     } catch (err) {
+      console.error("Error creating subscription:", err);
+      
       if (err instanceof ZodError) {
         const validationError = fromZodError(err);
+        console.error("Validation error:", validationError.message);
         return res.status(400).json({ message: validationError.message });
       }
+      
       res.status(500).json({ message: "Failed to create subscription" });
     }
   });
