@@ -226,7 +226,11 @@ export default function AddSubscriptionModal({
                           placeholder="0.00" 
                           className="pl-7"
                           {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          onChange={(e) => {
+                            // Only parse if value is not empty
+                            const value = e.target.value === '' ? '' : parseFloat(e.target.value);
+                            field.onChange(value);
+                          }}
                         />
                       </div>
                     </FormControl>

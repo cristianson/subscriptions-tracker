@@ -30,10 +30,15 @@ export const subscriptions = pgTable("subscriptions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertSubscriptionSchema = createInsertSchema(subscriptions)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    // Allow nextPaymentDate to be a string that will be converted to a Date
+    nextPaymentDate: z.string().transform((dateStr) => new Date(dateStr)),
+  });
 
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
