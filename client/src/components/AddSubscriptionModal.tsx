@@ -97,7 +97,7 @@ export default function AddSubscriptionModal({
     }
   }, [subscription, form]);
   
-  const { data: categories } = useQuery({
+  const { data: categories = [] } = useQuery<any[]>({
     queryKey: ["/api/categories"],
   });
   
@@ -256,7 +256,7 @@ export default function AddSubscriptionModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories?.map((category) => (
+                        {Array.isArray(categories) && categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.name}>
                             {category.name}
                           </SelectItem>
@@ -347,7 +347,11 @@ export default function AddSubscriptionModal({
                   <FormControl>
                     <Textarea 
                       placeholder="Add any additional details about this subscription"
-                      {...field}
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                     />
                   </FormControl>
                   <FormMessage />
@@ -362,7 +366,7 @@ export default function AddSubscriptionModal({
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                   <FormControl>
                     <Checkbox
-                      checked={field.value}
+                      checked={field.value || false}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
