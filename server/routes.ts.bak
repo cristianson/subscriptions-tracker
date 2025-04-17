@@ -1,7 +1,8 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
+  insertSubscriptionSchema, 
   type InsertSubscription,
   type Subscription
 } from "@shared/schema";
@@ -35,25 +36,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST create new subscription - FIXED VERSION WITHOUT ZOD VALIDATION
+  // POST create new subscription
   app.post("/api/subscriptions", async (req: Request, res: Response) => {
     try {
       console.log("Received subscription data:", JSON.stringify(req.body));
       
-      // Manually convert nextPaymentDate
+      // Convert nextPaymentDate string to Date object before validation
       const submittedData = { 
         ...req.body,
-        nextPaymentDate: new Date(req.body.nextPaymentDate) 
+        nextPaymentDate: req.body.nextPaymentDate ? new Date(req.body.nextPaymentDate) : new Date() 
       };
       
-      console.log("Processed data:", JSON.stringify(submittedData));
-      
+      // Skip the Zod validation and use the modified data directly
       const newSubscription = await storage.createSubscription(submittedData);
       console.log("Created subscription:", JSON.stringify(newSubscription));
       
       res.status(201).json(newSubscription);
     } catch (err) {
       console.error("Error creating subscription:", err);
+      
+      if (err instanceof ZodError) {
+        const validationError = fromZodError(err);
+        console.error("Validation error:", validationError.message);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
       res.status(500).json({ message: "Failed to create subscription" });
     }
   });
