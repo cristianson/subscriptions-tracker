@@ -84,23 +84,35 @@ export class MemStorage implements IStorage {
     return this.subscriptions.get(id);
   }
   
-  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+  async createSubscription(data: any): Promise<Subscription> {
     const id = this.subscriptionId++;
     const now = new Date();
+    
+    // Make sure nextPaymentDate is a Date object
+    if (typeof data.nextPaymentDate === 'string') {
+      data.nextPaymentDate = new Date(data.nextPaymentDate);
+    }
+    
     const subscription: Subscription = { 
-      ...insertSubscription, 
+      ...data, 
       id, 
       createdAt: now 
     };
+    
     this.subscriptions.set(id, subscription);
     return subscription;
   }
   
-  async updateSubscription(id: number, subscription: Partial<InsertSubscription>): Promise<Subscription | undefined> {
+  async updateSubscription(id: number, data: any): Promise<Subscription | undefined> {
     const existing = this.subscriptions.get(id);
     if (!existing) return undefined;
     
-    const updated: Subscription = { ...existing, ...subscription };
+    // Make sure nextPaymentDate is a Date object if provided
+    if (typeof data.nextPaymentDate === 'string') {
+      data.nextPaymentDate = new Date(data.nextPaymentDate);
+    }
+    
+    const updated: Subscription = { ...existing, ...data };
     this.subscriptions.set(id, updated);
     return updated;
   }
@@ -190,7 +202,7 @@ export class MemStorage implements IStorage {
     // This is just for testing during development and will be populated by users in production
     const today = new Date();
     
-    const sampleSubscriptions: InsertSubscription[] = [
+    const sampleSubscriptions = [
       {
         name: "Spotify Premium",
         provider: "Spotify",

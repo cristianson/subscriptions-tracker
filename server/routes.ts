@@ -35,20 +35,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST create new subscription - FIXED VERSION WITHOUT ZOD VALIDATION
+  // POST create new subscription - FIXED VERSION WITHOUT ANY VALIDATION
   app.post("/api/subscriptions", async (req: Request, res: Response) => {
     try {
       console.log("Received subscription data:", JSON.stringify(req.body));
       
-      // Manually convert nextPaymentDate
-      const submittedData = { 
-        ...req.body,
-        nextPaymentDate: new Date(req.body.nextPaymentDate) 
-      };
-      
-      console.log("Processed data:", JSON.stringify(submittedData));
-      
-      const newSubscription = await storage.createSubscription(submittedData);
+      // Pass data directly to storage
+      const newSubscription = await storage.createSubscription(req.body);
       console.log("Created subscription:", JSON.stringify(newSubscription));
       
       res.status(201).json(newSubscription);
@@ -58,22 +51,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PATCH update subscription
+  // PATCH update subscription - ALSO SIMPLER VERSION
   app.patch("/api/subscriptions/:id", async (req: Request, res: Response) => {
     try {
       console.log("Updating subscription with data:", JSON.stringify(req.body));
       
       const id = parseInt(req.params.id);
       
-      // Convert nextPaymentDate string to Date object if it exists
-      const subscriptionData = { 
-        ...req.body,
-        ...(req.body.nextPaymentDate && { 
-          nextPaymentDate: new Date(req.body.nextPaymentDate) 
-        })
-      };
-      
-      const updatedSubscription = await storage.updateSubscription(id, subscriptionData);
+      // Handle conversion directly in storage
+      const updatedSubscription = await storage.updateSubscription(id, req.body);
       
       if (!updatedSubscription) {
         return res.status(404).json({ message: "Subscription not found" });
