@@ -26,12 +26,18 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
+/**
+ * Hash a password using scrypt with salt
+ */
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
+/**
+ * Compare a plain text password to a stored hashed password
+ */
 async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
@@ -47,6 +53,7 @@ export async function setupAuth(app: Express) {
     createTableIfMissing: true
   });
 
+  // Configure session settings
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'subscription-minder-dev-secret',
     resave: false,
@@ -54,16 +61,18 @@ export async function setupAuth(app: Express) {
     store: sessionStore,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      secure: false, // Set to false for now to troubleshoot
+      secure: false, // Set to false for development/testing
       sameSite: 'lax'
     }
   };
 
+  // Set up middleware
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Configure local strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -79,6 +88,7 @@ export async function setupAuth(app: Express) {
     }),
   );
 
+  // Serialize/deserialize user
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });

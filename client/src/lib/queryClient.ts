@@ -1,5 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+/**
+ * Helper to throw an error if response is not OK
+ */
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -7,17 +10,25 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+/**
+ * Ensures a URL is absolute by adding origin if needed
+ */
+function getAbsoluteUrl(url: string): string {
+  if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('http')) {
+    return `${window.location.origin}${url}`;
+  }
+  return url;
+}
+
+/**
+ * Makes an API request with consistent settings
+ */
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Ensure we're using the full URL path
-  let fullUrl = url;
-  // If the URL starts with a slash but is not an absolute URL, add origin
-  if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('http')) {
-    fullUrl = `${window.location.origin}${url}`;
-  }
+  const fullUrl = getAbsoluteUrl(url);
   
   const res = await fetch(fullUrl, {
     method,
@@ -30,18 +41,16 @@ export async function apiRequest(
   return res;
 }
 
+/**
+ * Factory for creating a queryFn with 401 handling
+ */
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Ensure we're using the full URL path
-    let url = queryKey[0] as string;
-    // If the URL starts with a slash, consider adding the origin
-    if (url.startsWith('/') && !url.startsWith('//')) {
-      url = `${window.location.origin}${url}`;
-    }
+    const url = getAbsoluteUrl(queryKey[0] as string);
     
     const res = await fetch(url, {
       credentials: "include",
@@ -55,6 +64,9 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+/**
+ * Shared query client with default settings
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

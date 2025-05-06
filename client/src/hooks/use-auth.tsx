@@ -30,7 +30,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  // We can use relative URL as queryClient will handle it
+  
+  // Basic query for user state
   const {
     data: user,
     error,
@@ -41,15 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
   });
 
+  // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      // Use absolute URL to ensure correct endpoint targeting
-      const baseUrl = window.location.origin;
-      const res = await apiRequest("POST", `${baseUrl}/api/login`, credentials);
+      const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData([`${baseUrl}/api/user`], user);
+      queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
@@ -64,15 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Register mutation
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
-      // Use absolute URL to ensure correct endpoint targeting
-      const baseUrl = window.location.origin;
-      const res = await apiRequest("POST", `${baseUrl}/api/register`, credentials);
+      const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData([`${baseUrl}/api/user`], user);
+      queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
         description: `Welcome to SubscriptionMinder, ${user.username}!`,
@@ -87,15 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Use absolute URL to ensure correct endpoint targeting
-      const baseUrl = window.location.origin;
-      await apiRequest("POST", `${baseUrl}/api/logout`);
+      await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData([`${baseUrl}/api/user`], null);
-      // Invalidate all queries to refresh data
+      queryClient.setQueryData(["/api/user"], null);
       queryClient.invalidateQueries();
       toast({
         title: "Logged out",

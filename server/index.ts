@@ -3,28 +3,14 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
 import { runMigrations } from "./migration";
+import { corsMiddleware } from "./cors-middleware";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add CORS headers for API routes
-app.use('/api', (req, res, next) => {
-  // Instead of '*', use the actual origin or set it dynamically based on the request
-  // This is required for credentials to work - can't use wildcard with credentials
-  const origin = req.headers.origin || '';
-  res.header('Access-Control-Allow-Origin', origin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
-});
+// Add CORS headers for all routes
+app.use(corsMiddleware);
 
 app.use((req, res, next) => {
   const start = Date.now();
