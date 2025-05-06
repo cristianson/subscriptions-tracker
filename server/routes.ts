@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
 import { setupAuth } from "./auth";
+import { dbStorage } from "./dbStorage";
 import { 
   type InsertSubscription,
   type Subscription,
@@ -12,21 +13,31 @@ import { fromZodError } from "zod-validation-error";
 import { eq, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // GET all subscriptions
+  // Initialize database data
+  try {
+    await dbStorage.initializeData();
+  } catch (err) {
+    console.error("Error initializing database data:", err);
+  }
+
+  // GET all subscriptions (filtered by user if authenticated)
   app.get("/api/subscriptions", async (req: Request, res: Response) => {
     try {
-      const subscriptions = await storage.getAllSubscriptions();
+      const userId = req.isAuthenticated() ? req.user.id : undefined;
+      const subscriptions = await dbStorage.getAllSubscriptions(userId);
       res.json(subscriptions);
     } catch (err) {
+      console.error("Error fetching subscriptions:", err);
       res.status(500).json({ message: "Failed to fetch subscriptions" });
     }
   });
 
-  // GET subscription by ID
+  // GET subscription by ID (filtered by user if authenticated)
   app.get("/api/subscriptions/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const subscription = await storage.getSubscription(id);
+      const userId = req.isAuthenticated() ? req.user.id : undefined;
+      const subscription = await dbStorage.getSubscription(id, userId);
       
       if (!subscription) {
         return res.status(404).json({ message: "Subscription not found" });
@@ -34,17 +45,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(subscription);
     } catch (err) {
+      console.error("Error fetching subscription:", err);
       res.status(500).json({ message: "Failed to fetch subscription" });
     }
   });
 
-  // POST create new subscription - FIXED VERSION WITHOUT ANY VALIDATION
+  // POST create new subscription - with user ID if authenticated
   app.post("/api/subscriptions", async (req: Request, res: Response) => {
     try {
       console.log("Received subscription data:", JSON.stringify(req.body));
       
-      // Pass data directly to storage
-      const newSubscription = await storage.createSubscription(req.body);
+      // Add user ID if authenticated
+      const subscriptionData = {
+        ...req.body,
+        userId: req.isAuthenticated() ? req.user.id : null
+      };
+      
+      // Pass data to dbStorage
+      const newSubscription = await dbStorage.createSubscription(subscriptionData);
       console.log("Created subscription:", JSON.stringify(newSubscription));
       
       res.status(201).json(newSubscription);
@@ -54,15 +72,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PATCH update subscription - ALSO SIMPLER VERSION
+  // PATCH update subscription (filtered by user if authenticated)
   app.patch("/api/subscriptions/:id", async (req: Request, res: Response) => {
     try {
       console.log("Updating subscription with data:", JSON.stringify(req.body));
       
       const id = parseInt(req.params.id);
+      const userId = req.isAuthenticated() ? req.user.id : undefined;
       
       // Handle conversion directly in storage
-      const updatedSubscription = await storage.updateSubscription(id, req.body);
+      const updatedSubscription = await dbStorage.updateSubscription(id, req.body, userId);
       
       if (!updatedSubscription) {
         return res.status(404).json({ message: "Subscription not found" });
@@ -76,11 +95,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DELETE subscription
+  // DELETE subscription (filtered by user if authenticated)
   app.delete("/api/subscriptions/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteSubscription(id);
+      const userId = req.isAuthenticated() ? req.user.id : undefined;
+      const success = await dbStorage.deleteSubscription(id, userId);
       
       if (!success) {
         return res.status(404).json({ message: "Subscription not found" });
@@ -88,27 +108,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).send();
     } catch (err) {
+      console.error("Error deleting subscription:", err);
       res.status(500).json({ message: "Failed to delete subscription" });
     }
   });
 
-  // GET all categories
+  // GET all categories (these are global, not user-specific)
   app.get("/api/categories", async (req: Request, res: Response) => {
     try {
-      const categories = await storage.getAllCategories();
+      const categories = await dbStorage.getAllCategories();
       res.json(categories);
     } catch (err) {
+      console.error("Error fetching categories:", err);
       res.status(500).json({ message: "Failed to fetch categories" });
     }
   });
 
-  // GET dashboard summary data
+  // GET dashboard summary data (filtered by user if authenticated)
   app.get("/api/dashboard/summary", async (req: Request, res: Response) => {
     try {
-      const totalMonthlyExpense = await storage.getTotalMonthlyExpense();
-      const activeSubscriptions = await storage.getActiveSubscriptionsCount();
-      const upcomingPaymentsTotal = await storage.getUpcomingPaymentsTotal(7);
-      const upcomingPayments = await storage.getUpcomingPayments(5);
+      const userId = req.isAuthenticated() ? req.user.id : undefined;
+      const totalMonthlyExpense = await dbStorage.getTotalMonthlyExpense(userId);
+      const activeSubscriptions = await dbStorage.getActiveSubscriptionsCount(userId);
+      const upcomingPaymentsTotal = await dbStorage.getUpcomingPaymentsTotal(7, userId);
+      const upcomingPayments = await dbStorage.getUpcomingPayments(5, userId);
       
       res.json({
         totalMonthlyExpense,
@@ -117,17 +140,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         upcomingPaymentsThisWeek: upcomingPayments.length,
       });
     } catch (err) {
+      console.error("Error fetching dashboard summary:", err);
       res.status(500).json({ message: "Failed to fetch dashboard summary" });
     }
   });
 
-  // GET upcoming payments
+  // GET upcoming payments (filtered by user if authenticated)
   app.get("/api/dashboard/upcoming-payments", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const upcomingPayments = await storage.getUpcomingPayments(limit);
+      const userId = req.isAuthenticated() ? req.user.id : undefined;
+      const upcomingPayments = await dbStorage.getUpcomingPayments(limit, userId);
       res.json(upcomingPayments);
     } catch (err) {
+      console.error("Error fetching upcoming payments:", err);
       res.status(500).json({ message: "Failed to fetch upcoming payments" });
     }
   });
