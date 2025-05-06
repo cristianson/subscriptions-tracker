@@ -63,22 +63,6 @@ export async function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-  
-  // Ensure credentials are included in all API responses for auth endpoints
-  app.use('/api/login', (req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', 'true');
-    next();
-  });
-  
-  app.use('/api/register', (req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', 'true');
-    next();
-  });
-  
-  app.use('/api/user', (req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', 'true');
-    next();
-  });
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {

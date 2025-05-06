@@ -10,7 +10,11 @@ app.use(express.urlencoded({ extended: false }));
 
 // Add CORS headers for API routes
 app.use('/api', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  // Instead of '*', use the actual origin or set it dynamically based on the request
+  // This is required for credentials to work - can't use wildcard with credentials
+  const origin = req.headers.origin || '';
+  res.header('Access-Control-Allow-Origin', origin);
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
