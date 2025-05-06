@@ -13,6 +13,8 @@ import { fromZodError } from "zod-validation-error";
 import { eq, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication routes
+  await setupAuth(app);
   // Initialize database data
   try {
     await dbStorage.initializeData();
