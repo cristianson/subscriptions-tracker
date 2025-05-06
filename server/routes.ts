@@ -13,7 +13,7 @@ import { fromZodError } from "zod-validation-error";
 import { eq, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Add a debug endpoint to help diagnose any routing issues
+  // Add debug endpoints to help diagnose any routing issues
   app.get('/api/debug', (req, res) => {
     const info = {
       cookies: req.cookies,
@@ -27,6 +27,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       timestamp: new Date().toISOString()
     };
     res.json(info);
+  });
+  
+  // Test login endpoint that doesn't use passport
+  app.post('/api/test-login', (req, res) => {
+    console.log('Test login request body:', req.body);
+    
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
+    
+    // Just return success for testing
+    res.json({ 
+      success: true, 
+      message: 'Direct login successful',
+      testUser: { id: 999, username, role: 'test' }
+    });
   });
   
   // Setup authentication routes

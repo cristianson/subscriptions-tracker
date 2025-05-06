@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Authentication Test Page</h1>
+  
+  <div class="card">
+    <h2>Debug Info</h2>
+    <button id="check-debug">Check Debug Info</button>
+    <pre id="debug-result">Results will appear here...</pre>
+  </div>
+
+  <div class="card">
+    <h2>Current User</h2>
+    <button id="check-user">Check Current User</button>
+    <pre id="user-result">Results will appear here...</pre>
+  </div>
+
+  <div class="card">
+    <h2>Login</h2>
+    <form id="login-form">
+      <div>
+        <label for="login-username">Username:</label>
+        <input type="text" id="login-username" value="testuser" />
+      </div>
+      <div>
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" value="testpassword" />
+      </div>
+      <button type="submit">Login</button>
+      <button type="button" id="test-login">Test Login</button>
+    </form>
+    <pre id="login-result">Results will appear here...</pre>
+  </div>
+
+  <div class="card">
+    <h2>Register</h2>
+    <form id="register-form">
+      <div>
+        <label for="register-username">Username:</label>
+        <input type="text" id="register-username" value="newuser" />
+      </div>
+      <div>
+        <label for="register-password">Password:</label>
+        <input type="password" id="register-password" value="newpassword" />
+      </div>
+      <div>
+        <label for="register-name">Name (optional):</label>
+        <input type="text" id="register-name" value="New User" />
+      </div>
+      <button type="submit">Register</button>
+    </form>
+    <pre id="register-result">Results will appear here...</pre>
+  </div>
+
+  <div class="card">
+    <h2>Logout</h2>
+    <button id="logout">Logout</button>
+    <pre id="logout-result">Results will appear here...</pre>
+  </div>
+
+  <script>
+    // Debug Info
+    document.getElementById('check-debug').addEventListener('click', async () => {
+      const resultElement = document.getElementById('debug-result');
+      resultElement.textContent = 'Loading...';
+      
+      try {
+        const response = await fetch('/api/debug', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        resultElement.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultElement.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    // Check Current User
+    document.getElementById('check-user').addEventListener('click', async () => {
+      const resultElement = document.getElementById('user-result');
+      resultElement.textContent = 'Loading...';
+      
+      try {
+        const response = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (response.status === 401) {
+          resultElement.textContent = 'Not authenticated';
+          return;
+        }
+        
+        const data = await response.json();
+        resultElement.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultElement.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    // Login
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultElement = document.getElementById('login-result');
+      resultElement.textContent = 'Loading...';
+      
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+          credentials: 'include'
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          resultElement.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
+        } else {
+          const text = await response.text();
+          resultElement.textContent = `Status: ${response.status}\nResponse: ${text}`;
+        }
+      } catch (error) {
+        resultElement.textContent = `Error: ${error.message}`;
+      }
+    });
+    
+    // Test Login (using the simplified endpoint)
+    document.getElementById('test-login').addEventListener('click', async () => {
+      const resultElement = document.getElementById('login-result');
+      resultElement.textContent = 'Testing simplified login...';
+      
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      
+      try {
+        const response = await fetch('/api/test-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+          credentials: 'include'
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          resultElement.textContent = `Test Login Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
+        } else {
+          const text = await response.text();
+          resultElement.textContent = `Test Login Status: ${response.status}\nResponse: ${text}`;
+        }
+      } catch (error) {
+        resultElement.textContent = `Test Login Error: ${error.message}`;
+      }
+    });
+
+    // Register
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultElement = document.getElementById('register-result');
+      resultElement.textContent = 'Loading...';
+      
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+      const name = document.getElementById('register-name').value;
+      
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password, name }),
+          credentials: 'include'
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          resultElement.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
+        } else {
+          const text = await response.text();
+          resultElement.textContent = `Status: ${response.status}\nResponse: ${text}`;
+        }
+      } catch (error) {
+        resultElement.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    // Logout
+    document.getElementById('logout').addEventListener('click', async () => {
+      const resultElement = document.getElementById('logout-result');
+      resultElement.textContent = 'Loading...';
+      
+      try {
+        const response = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          resultElement.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
+        } else {
+          const text = await response.text();
+          resultElement.textContent = `Status: ${response.status}\nResponse: ${text}`;
+        }
+      } catch (error) {
+        resultElement.textContent = `Error: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
