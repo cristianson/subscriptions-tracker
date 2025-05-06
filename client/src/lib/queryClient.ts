@@ -14,8 +14,12 @@ async function throwIfResNotOk(res: Response) {
  * Ensures a URL is absolute by adding origin if needed
  */
 function getAbsoluteUrl(url: string): string {
-  if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('http')) {
-    return `${window.location.origin}${url}`;
+  // In production, always use relative URLs since we're being served from the same origin
+  if (import.meta.env.DEV) {
+    // Only in development, we might need absolute URLs
+    if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('http')) {
+      return `${window.location.origin}${url}`;
+    }
   }
   return url;
 }

@@ -4,6 +4,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 import {
   Form,
@@ -35,6 +37,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
+  const { toast } = useToast();
 
   // Use useEffect for redirection to avoid React hook ordering issues
   useEffect(() => {
@@ -60,12 +63,39 @@ export default function AuthPage() {
     },
   });
 
-  const onLoginSubmit = (values: LoginValues) => {
-    loginMutation.mutate(values, {
-      onSuccess: () => {
-        setLocation("/");
-      },
-    });
+  const onLoginSubmit = async (values: LoginValues) => {
+    try {
+      // Use a direct fetch request for debugging purposes
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Login failed: ${response.status} - ${errorText}`);
+      }
+      
+      const user = await response.json();
+      console.log("Login successful:", user);
+      
+      // Update the query cache manually
+      queryClient.setQueryData(['/api/user'], user);
+      
+      // Navigate to home page
+      setLocation("/");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   const onRegisterSubmit = (values: RegisterValues) => {

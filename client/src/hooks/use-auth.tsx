@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      // Use path instead of absolute URL  
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },

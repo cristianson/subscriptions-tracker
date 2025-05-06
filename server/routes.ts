@@ -13,6 +13,22 @@ import { fromZodError } from "zod-validation-error";
 import { eq, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add a debug endpoint to help diagnose any routing issues
+  app.get('/api/debug', (req, res) => {
+    const info = {
+      cookies: req.cookies,
+      session: req.session,
+      headers: req.headers,
+      isAuthenticated: req.isAuthenticated?.() || false,
+      protocol: req.protocol,
+      hostname: req.hostname,
+      path: req.path,
+      originalUrl: req.originalUrl,
+      timestamp: new Date().toISOString()
+    };
+    res.json(info);
+  });
+  
   // Setup authentication routes
   await setupAuth(app);
   // Initialize database data
