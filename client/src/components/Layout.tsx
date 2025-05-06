@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import MobileMenu from "./MobileMenu";
 import { useAuth } from "@/hooks/use-auth";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
   HomeIcon, 
   CreditCardIcon, 
@@ -74,14 +75,17 @@ export default function Layout({ children }: LayoutProps) {
         
         <div className="border-t border-gray-200 p-4">
           <div className="flex flex-col space-y-3">
-            <div className="flex items-center">
-              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-                <UserIcon className="h-4 w-4" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                  <UserIcon className="h-4 w-4" />
+                </div>
+                <div className="ml-3 flex-1 overflow-hidden">
+                  <p className="text-sm font-medium text-gray-700 truncate">{user?.username || 'Guest'}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+                </div>
               </div>
-              <div className="ml-3 flex-1 overflow-hidden">
-                <p className="text-sm font-medium text-gray-700 truncate">{user?.username || 'Guest'}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
-              </div>
+              <ThemeToggle />
             </div>
             
             <Button 
