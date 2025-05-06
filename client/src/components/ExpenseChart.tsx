@@ -90,7 +90,7 @@ export default function ExpenseChart() {
             onClick={() => setTimeRange("yearly")}
             className={cn(
               "rounded-l-none",
-              timeRange === "yearly" ? "bg-primary text-white" : ""
+              timeRange === "yearly" ? "bg-zinc-900 text-white" : ""
             )}
           >
             Yearly

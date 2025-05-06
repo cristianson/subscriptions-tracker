@@ -266,7 +266,7 @@ export default function SubscriptionList() {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => handleEdit(subscription)}
-                          className="text-primary hover:text-primary/80 mr-3"
+                          className="text-zinc-800 hover:text-zinc-600 mr-3"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
