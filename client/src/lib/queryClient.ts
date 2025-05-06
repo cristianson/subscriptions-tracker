@@ -12,7 +12,14 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Ensure we're using the full URL path
+  let fullUrl = url;
+  // If the URL starts with a slash but is not an absolute URL, add origin
+  if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('http')) {
+    fullUrl = `${window.location.origin}${url}`;
+  }
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +36,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Ensure we're using the full URL path
+    let url = queryKey[0] as string;
+    // If the URL starts with a slash, consider adding the origin
+    if (url.startsWith('/') && !url.startsWith('//')) {
+      url = `${window.location.origin}${url}`;
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 

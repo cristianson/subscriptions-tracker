@@ -30,6 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  // We can use relative URL as queryClient will handle it
   const {
     data: user,
     error,
@@ -42,11 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
+      // Use absolute URL to ensure correct endpoint targeting
+      const baseUrl = window.location.origin;
+      const res = await apiRequest("POST", `${baseUrl}/api/login`, credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData([`${baseUrl}/api/user`], user);
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
@@ -63,11 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
+      // Use absolute URL to ensure correct endpoint targeting
+      const baseUrl = window.location.origin;
+      const res = await apiRequest("POST", `${baseUrl}/api/register`, credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData([`${baseUrl}/api/user`], user);
       toast({
         title: "Registration successful",
         description: `Welcome to SubscriptionMinder, ${user.username}!`,
@@ -84,10 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      // Use absolute URL to ensure correct endpoint targeting
+      const baseUrl = window.location.origin;
+      await apiRequest("POST", `${baseUrl}/api/logout`);
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData([`${baseUrl}/api/user`], null);
       // Invalidate all queries to refresh data
       queryClient.invalidateQueries();
       toast({
