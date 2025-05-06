@@ -13,7 +13,14 @@ const PostgresSessionStore = connectPg(session);
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      email: string | null;
+      name: string | null;
+      createdAt: Date | null;
+    }
   }
 }
 
@@ -119,7 +126,7 @@ export async function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
         return next(err);
       }
