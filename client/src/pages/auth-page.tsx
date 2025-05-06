@@ -63,39 +63,13 @@ export default function AuthPage() {
     },
   });
 
-  const onLoginSubmit = async (values: LoginValues) => {
-    try {
-      // Use a direct fetch request for debugging purposes
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Login failed: ${response.status} - ${errorText}`);
-      }
-      
-      const user = await response.json();
-      console.log("Login successful:", user);
-      
-      // Update the query cache manually
-      queryClient.setQueryData(['/api/user'], user);
-      
-      // Navigate to home page
-      setLocation("/");
-    } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
-      });
-    }
+  const onLoginSubmit = (values: LoginValues) => {
+    // Revert to using the mutation from useAuth hook
+    loginMutation.mutate(values, {
+      onSuccess: () => {
+        setLocation("/");
+      },
+    });
   };
 
   const onRegisterSubmit = (values: RegisterValues) => {
