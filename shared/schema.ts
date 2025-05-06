@@ -1,22 +1,9 @@
 import { pgTable, text, serial, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
-// Subscription Schema
+// Subscription Schema - declare first to avoid circular reference
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -27,8 +14,46 @@ export const subscriptions = pgTable("subscriptions", {
   billingCycle: text("billing_cycle").notNull(), // monthly, quarterly, annually, custom
   nextPaymentDate: timestamp("next_payment_date").notNull(),
   reminderEnabled: boolean("reminder_enabled").default(false),
+  userId: integer("user_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// User Schema
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email"),
+  name: text("name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  subscriptions: many(subscriptions),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertUserSchema = createInsertSchema(users)
+  .pick({
+    username: true,
+    password: true,
+    email: true,
+    name: true,
+  })
+  .extend({
+    email: z.string().email().optional(),
+    name: z.string().optional(),
+  });
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({
@@ -38,6 +63,7 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .extend({
     // Allow nextPaymentDate to be a string that will be converted to a Date
     nextPaymentDate: z.string().transform((dateStr) => new Date(dateStr)),
+    userId: z.number().optional(),
   });
 
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
