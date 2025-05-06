@@ -21,13 +21,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CreditCardIcon, Loader2 } from "lucide-react";
 
+// Simpler login schema without complex validation
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  username: z.string().nonempty("Username is required"),
+  password: z.string().nonempty("Password is required"),
 });
 
 const registerSchema = loginSchema.extend({
-  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  name: z.string().optional(),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
