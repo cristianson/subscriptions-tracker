@@ -20,7 +20,7 @@ export default function Subscriptions() {
         <div className="mt-4 md:mt-0">
           <Button 
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-zinc-900 text-white hover:bg-zinc-800 border-zinc-900"
           >
             <PlusIcon className="mr-2 h-4 w-4" />
             Add Subscription

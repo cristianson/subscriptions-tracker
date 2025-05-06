@@ -387,6 +387,7 @@ export default function AddSubscriptionModal({
               <Button 
                 type="submit" 
                 disabled={createMutation.isPending || updateMutation.isPending}
+                className="bg-zinc-900 text-white hover:bg-zinc-800 border-zinc-900"
               >
                 {isEditing ? "Update Subscription" : "Add Subscription"}
               </Button>

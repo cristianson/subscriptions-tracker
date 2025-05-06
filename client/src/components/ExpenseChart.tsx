@@ -79,7 +79,7 @@ export default function ExpenseChart() {
             onClick={() => setTimeRange("monthly")}
             className={cn(
               "rounded-r-none",
-              timeRange === "monthly" ? "bg-primary text-white" : ""
+              timeRange === "monthly" ? "bg-zinc-900 text-white" : ""
             )}
           >
             Monthly
@@ -124,7 +124,7 @@ export default function ExpenseChart() {
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
               />
-              <Bar dataKey="amount" fill="#635BFF" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="amount" fill="#2A2A2A" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
