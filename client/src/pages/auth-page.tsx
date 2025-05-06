@@ -25,7 +25,6 @@ const loginSchema = z.object({
 });
 
 const registerSchema = loginSchema.extend({
-  email: z.string().email("Please enter a valid email address").optional(),
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
 });
 
@@ -56,7 +55,6 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
-      email: "",
       name: "",
     },
   });
@@ -178,20 +176,6 @@ export default function AuthPage() {
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email (Optional)</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="your@email.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
