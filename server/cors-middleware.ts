@@ -8,9 +8,16 @@ export function corsMiddleware(req: Request, res: Response, next: NextFunction) 
   // Set CORS headers
   const origin = req.headers.origin || '';
   
-  // For authentication to work, we must use a specific origin (not wildcard)
-  // when credentials are included
-  res.header('Access-Control-Allow-Origin', origin);
+  if (process.env.NODE_ENV === 'development' && origin) {
+    // In development, use the specific origin
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    // In production, API and client are served from the same origin
+    // so we can be more restrictive
+    res.header('Access-Control-Allow-Origin', req.headers.host || '');
+  }
+  
+  // Common headers needed for authentication to work
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');

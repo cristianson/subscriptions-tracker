@@ -61,8 +61,10 @@ export async function setupAuth(app: Express) {
     store: sessionStore,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      secure: false, // Set to false for development/testing
-      sameSite: 'lax'
+      secure: process.env.NODE_ENV === 'production', // Only use secure in production
+      sameSite: 'lax',
+      path: '/',
+      httpOnly: true
     }
   };
 
