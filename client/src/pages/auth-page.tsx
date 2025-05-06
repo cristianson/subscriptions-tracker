@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CreditCardIcon } from "lucide-react";
+import { CreditCardIcon, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -79,19 +79,19 @@ export default function AuthPage() {
   return (
     <div className="flex min-h-screen">
       {/* Form Section */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold">SubscriptionMinder</h1>
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold tracking-tight">SubscriptionMinder</h1>
             <p className="text-muted-foreground mt-2">
-              Manage your subscriptions in one place
+              Track and manage your subscriptions effortlessly
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-zinc-100">
+              <TabsTrigger value="login" className="font-medium">Login</TabsTrigger>
+              <TabsTrigger value="register" className="font-medium">Register</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -135,10 +135,15 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full py-6 mt-2 text-md font-medium"
                     disabled={loginMutation.isPending}
                   >
-                    {loginMutation.isPending ? "Logging in..." : "Login"}
+                    {loginMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Logging in...
+                      </>
+                    ) : "Sign In"}
                   </Button>
                 </form>
               </Form>
@@ -199,10 +204,15 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full py-6 mt-2 text-md font-medium"
                     disabled={registerMutation.isPending}
                   >
-                    {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                    {registerMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : "Create Account"}
                   </Button>
                 </form>
               </Form>
@@ -212,38 +222,38 @@ export default function AuthPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary/5 flex-col items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-zinc-900 flex-col items-center justify-center p-12">
         <div className="max-w-lg text-center">
-          <div className="bg-primary/10 p-4 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8">
-            <CreditCardIcon className="w-12 h-12 text-primary" />
+          <div className="bg-zinc-800 p-4 rounded-2xl w-24 h-24 flex items-center justify-center mx-auto mb-8 shadow-lg border border-zinc-700">
+            <CreditCardIcon className="w-12 h-12 text-white" />
           </div>
-          <h2 className="text-4xl font-bold mb-4">Track Your Subscriptions</h2>
-          <p className="text-lg mb-6">
+          <h2 className="text-4xl font-bold mb-4 text-white">Track Your Subscriptions</h2>
+          <p className="text-lg mb-8 text-zinc-300">
             Never lose track of your subscriptions again. SubscriptionMinder helps you manage all 
             your recurring payments in one place with powerful analytics and reminders.
           </p>
-          <div className="grid grid-cols-2 gap-4 text-left">
-            <div className="bg-background rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold mb-2">Track Expenses</h3>
-              <p className="text-sm text-muted-foreground">
+          <div className="grid grid-cols-2 gap-6 text-left">
+            <div className="bg-zinc-800 rounded-xl p-5 shadow-md border border-zinc-700">
+              <h3 className="font-semibold mb-2 text-white">Track Expenses</h3>
+              <p className="text-sm text-zinc-400">
                 Monitor all your subscription costs in one dashboard.
               </p>
             </div>
-            <div className="bg-background rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold mb-2">Payment Reminders</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-zinc-800 rounded-xl p-5 shadow-md border border-zinc-700">
+              <h3 className="font-semibold mb-2 text-white">Payment Reminders</h3>
+              <p className="text-sm text-zinc-400">
                 Get notified before you're charged to avoid surprises.
               </p>
             </div>
-            <div className="bg-background rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold mb-2">Spending Insights</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-zinc-800 rounded-xl p-5 shadow-md border border-zinc-700">
+              <h3 className="font-semibold mb-2 text-white">Spending Insights</h3>
+              <p className="text-sm text-zinc-400">
                 Analyze your subscription spending with detailed reports.
               </p>
             </div>
-            <div className="bg-background rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold mb-2">Secure Access</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-zinc-800 rounded-xl p-5 shadow-md border border-zinc-700">
+              <h3 className="font-semibold mb-2 text-white">Secure Access</h3>
+              <p className="text-sm text-zinc-400">
                 Access your subscription data securely from anywhere.
               </p>
             </div>

@@ -3,11 +3,46 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  /* Custom styles for the app */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+
+  .stat-card {
+    @apply rounded-xl bg-card p-6 shadow-sm border border-border/40 card-hover;
+  }
+
+  .subscription-card {
+    @apply rounded-xl bg-card p-5 shadow-sm border border-border/40 card-hover relative overflow-hidden;
+  }
+  
+  .success-text {
+    @apply text-emerald-600;
+  }
+  
+  .warning-text {
+    @apply text-amber-600;
+  }
+  
+  .danger-text {
+    @apply text-rose-600;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold tracking-tight mb-4;
   }
 }
