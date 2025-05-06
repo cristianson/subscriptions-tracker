@@ -23,7 +23,6 @@ type LoginData = {
 };
 
 type RegisterData = LoginData & {
-  email?: string;
   name?: string;
 };
 
