@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 
 import {
   Form,
@@ -79,7 +79,7 @@ export default function AuthPage() {
   return (
     <div className="flex min-h-screen">
       {/* Form Section */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold tracking-tight">SubscriptionMinder</h1>
@@ -89,7 +89,7 @@ export default function AuthPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-zinc-100">
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted">
               <TabsTrigger value="login" className="font-medium">Login</TabsTrigger>
               <TabsTrigger value="register" className="font-medium">Register</TabsTrigger>
             </TabsList>
