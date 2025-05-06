@@ -4,25 +4,16 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import connectPgSimple from "connect-pg-simple";
-import { db } from "./db";
+import { dbStorage } from "./dbStorage";
+import { User } from "@shared/schema";
+import connectPg from "connect-pg-simple";
 import { pool } from "./db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
 
-// Define user type from the database schema
-interface UserRecord {
-  id: number;
-  username: string;
-  password: string;
-  email: string | null;
-  name: string | null;
-  createdAt: Date | null;
-}
+const PostgresSessionStore = connectPg(session);
 
 declare global {
   namespace Express {
-    interface User extends UserRecord {}
+    interface User extends User {}
   }
 }
 
@@ -42,21 +33,22 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export async function setupAuth(app: Express) {
-  // Create a PostgreSQL session store
-  const PgSession = connectPgSimple(session);
-  
+  // Create session store
+  const sessionStore = new PostgresSessionStore({
+    pool,
+    tableName: 'sessions',
+    createTableIfMissing: true
+  });
+
   const sessionSettings: session.SessionOptions = {
-    store: new PgSession({
-      pool,
-      tableName: 'session',
-      createTableIfMissing: true
-    }),
-    secret: process.env.SESSION_SECRET || 'subscription-manager-secret',
+    secret: process.env.SESSION_SECRET || 'subscription-minder-dev-secret',
     resave: false,
     saveUninitialized: false,
+    store: sessionStore,
     cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      sameSite: 'lax'
     }
   };
 
@@ -68,11 +60,9 @@ export async function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const result = await db.select().from(users).where(eq(users.username, username));
-        const user = result[0];
-        
+        const user = await dbStorage.getUserByUsername(username);
         if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
+          return done(null, false, { message: "Invalid username or password" });
         } else {
           return done(null, user);
         }
@@ -82,83 +72,82 @@ export async function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
   
   passport.deserializeUser(async (id: number, done) => {
     try {
-      const result = await db.select().from(users).where(eq(users.id, id));
-      const user = result[0];
+      const user = await dbStorage.getUser(id);
       done(null, user);
     } catch (err) {
       done(err);
     }
   });
 
-  // Authentication routes
-  app.post("/api/register", async (req, res, next) => {
+  // Authentication endpoints
+  app.post("/api/register", async (req, res) => {
     try {
-      const existingUserResult = await db.select().from(users).where(eq(users.username, req.body.username));
-      
-      if (existingUserResult.length > 0) {
-        return res.status(400).json({ message: "Username already exists" });
+      // Check if user exists
+      const existingUser = await dbStorage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: "Username already exists"
+        });
       }
 
+      // Hash password
       const hashedPassword = await hashPassword(req.body.password);
       
-      const [newUser] = await db.insert(users).values({
-        username: req.body.username,
+      // Create user
+      const user = await dbStorage.createUser({
+        ...req.body,
         password: hashedPassword,
-        email: req.body.email,
-        name: req.body.name
-      }).returning();
+      });
 
-      req.login(newUser, (err) => {
-        if (err) return next(err);
-        res.status(201).json({ 
-          id: newUser.id, 
-          username: newUser.username,
-          email: newUser.email,
-          name: newUser.name 
-        });
+      // Log user in
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed after registration" });
+        }
+        return res.status(201).json(user);
       });
     } catch (err) {
       console.error("Registration error:", err);
-      res.status(500).json({ message: "Failed to register user" });
+      res.status(500).json({ message: "Registration failed" });
     }
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: UserRecord | false, info: any) => {
-      if (err) return next(err);
-      if (!user) {
-        return res.status(401).json({ message: "Invalid username or password" });
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        return next(err);
       }
-      req.login(user, (err: any) => {
-        if (err) return next(err);
-        res.json({ 
-          id: user.id, 
-          username: user.username,
-          email: user.email,
-          name: user.name 
-        });
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        return res.json(user);
       });
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/logout", (req, res) => {
     req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.status(200).json({ message: "Logged out successfully" });
     });
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send({ authenticated: false });
-    res.json({
-      id: req.user.id,
-      username: req.user.username,
-      email: req.user.email,
-      name: req.user.name
-    });
+    if (req.isAuthenticated()) {
+      return res.json(req.user);
+    }
+    res.status(401).json({ authenticated: false });
   });
 }

@@ -1,6 +1,13 @@
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { X as CloseIcon } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { 
+  X as CloseIcon, 
+  LogOut as LogOutIcon, 
+  Loader2,
+  User as UserIcon 
+} from "lucide-react";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -14,6 +21,8 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ isOpen, onClose, navItems, activePath }: MobileMenuProps) {
+  const { user, logoutMutation } = useAuth();
+  
   if (!isOpen) return null;
 
   return (
@@ -56,14 +65,34 @@ export default function MobileMenu({ isOpen, onClose, navItems, activePath }: Mo
       </nav>
       
       <div className="border-t border-gray-200 p-4">
-        <div className="flex items-center">
-          <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-            <span className="text-sm font-medium">AM</span>
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center">
+            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+              <UserIcon className="h-4 w-4" />
+            </div>
+            <div className="ml-3 flex-1 overflow-hidden">
+              <p className="text-sm font-medium text-gray-700 truncate">{user?.username || 'Guest'}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+            </div>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-gray-700">Alex Morgan</p>
-            <p className="text-xs text-gray-500">alex@example.com</p>
-          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full flex items-center justify-center"
+            onClick={() => {
+              logoutMutation.mutate();
+              onClose();
+            }}
+            disabled={logoutMutation.isPending}
+          >
+            {logoutMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogOutIcon className="mr-2 h-4 w-4" />
+            )}
+            {logoutMutation.isPending ? 'Logging out...' : 'Sign Out'}
+          </Button>
         </div>
       </div>
     </div>

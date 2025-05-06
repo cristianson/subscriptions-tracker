@@ -2,6 +2,7 @@ import { useState, ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import MobileMenu from "./MobileMenu";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   HomeIcon, 
   CreditCardIcon, 
@@ -9,8 +10,12 @@ import {
   BellIcon, 
   BarChartIcon, 
   SettingsIcon,
-  MenuIcon
+  MenuIcon,
+  LogOutIcon,
+  UserIcon,
+  Loader2
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LayoutProps {
   children: ReactNode;
@@ -19,6 +24,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logoutMutation } = useAuth();
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: HomeIcon },
@@ -67,14 +73,31 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
         
         <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-              <span className="text-sm font-medium">AM</span>
+          <div className="flex flex-col space-y-3">
+            <div className="flex items-center">
+              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                <UserIcon className="h-4 w-4" />
+              </div>
+              <div className="ml-3 flex-1 overflow-hidden">
+                <p className="text-sm font-medium text-gray-700 truncate">{user?.username || 'Guest'}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">Alex Morgan</p>
-              <p className="text-xs text-gray-500">alex@example.com</p>
-            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full flex items-center justify-center"
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+            >
+              {logoutMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogOutIcon className="mr-2 h-4 w-4" />
+              )}
+              {logoutMutation.isPending ? 'Logging out...' : 'Sign Out'}
+            </Button>
           </div>
         </div>
       </aside>
